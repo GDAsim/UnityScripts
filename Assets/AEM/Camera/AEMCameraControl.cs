@@ -60,7 +60,7 @@ public class AEMCameraControl : MonoBehaviour
 
     void GetAllCamInGame()
     {
-        Cameralist = FindObjectsOfType(typeof(AEMCamera)).Cast<AEMCamera>().ToList();
+        Cameralist = FindObjectsByType<AEMCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None).ToList();
         //ActiveCamera = Camera.main.GetComponent<AEMCamera>();
     }
     public AEMCamera GetCam(int i)

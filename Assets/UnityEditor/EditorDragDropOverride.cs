@@ -6,13 +6,13 @@ static class EditorDragDropOverride
 {
     static EditorDragDropOverride()
     {
-        DragAndDrop.AddDropHandler(ProjectBrowserDropHandler);
-        DragAndDrop.AddDropHandler(SceneDropHandler);
-        DragAndDrop.AddDropHandler(HierarchyDropHandler);
-        DragAndDrop.AddDropHandler(InspectorDropHandler);
+        DragAndDrop.AddDropHandlerV2(ProjectBrowserDropHandler);
+        DragAndDrop.AddDropHandlerV2(SceneDropHandler);
+        DragAndDrop.AddDropHandlerV2(HierarchyDropHandler);
+        DragAndDrop.AddDropHandlerV2(InspectorDropHandler);
     }
 
-    static DragAndDropVisualMode ProjectBrowserDropHandler(int dragInstanceId, string dropUponPath, bool perform)
+    static DragAndDropVisualMode ProjectBrowserDropHandler(EntityId dragEntityId, string dropUponPath, bool perform)
     {
         return DragAndDropVisualMode.None;
     }
@@ -22,7 +22,7 @@ static class EditorDragDropOverride
         return DragAndDropVisualMode.None;
     }
 
-    static DragAndDropVisualMode HierarchyDropHandler(int dropTargetInstanceID, HierarchyDropFlags dropMode, Transform parentForDraggedObjects, bool perform)
+    static DragAndDropVisualMode HierarchyDropHandler(EntityId dropTargetEntityId, HierarchyDropFlags dropMode, Transform parentForDraggedObjects, bool perform)
     {
         return DragAndDropVisualMode.None;
     }
