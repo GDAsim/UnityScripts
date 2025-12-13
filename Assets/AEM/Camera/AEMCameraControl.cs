@@ -1,19 +1,17 @@
-using System.Collections.Generic;
 using System.Linq;
-using AEM;
+using System.Collections.Generic;
+
 using UnityEngine;
+
+using AEM;
 
 public class AEMCameraControl : MonoBehaviour
 {
-    public AEMCamera ActiveCamera;
-
+    public AEMCamera ActiveCamera { get; private set; }
     public List<AEMCamera> Cameralist;
 
-    [SerializeField]
-    protected List<GameObject> Maintargets;
-
-    [SerializeField]
-    protected List<GameObject> Looktargets;
+    [SerializeField] protected List<GameObject> Maintargets;
+    [SerializeField] protected List<GameObject> Looktargets;
 
     public void AddMainTarget(GameObject inmain)
     {
@@ -48,21 +46,18 @@ public class AEMCameraControl : MonoBehaviour
 
     void Awake()
     {
-        GetAllCamInGame();
-    }
-    void Start()
-    {
-    }
-    void Update()
-    {
-        GetAllCamInGame();
+        if (Cameralist.Count == 0)
+        {
+            GetAllCamInGame();
+        }
     }
 
     void GetAllCamInGame()
     {
         Cameralist = FindObjectsByType<AEMCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None).ToList();
-        //ActiveCamera = Camera.main.GetComponent<AEMCamera>();
     }
+
+    // Public
     public AEMCamera GetCam(int i)
     {
         if (i < Cameralist.Count)
@@ -71,51 +66,42 @@ public class AEMCameraControl : MonoBehaviour
         }
         throw new UnityException("GetCam Index Not Correct");
     }
- 
 
-    public void SetCurrentCamera(AEMCamera incam)
+    public void SetCameraActive(AEMCamera incam)
     {
         foreach (AEMCamera cam in Cameralist)
         {
-            if (cam != incam)
+            bool active = cam == incam;
+            cam.unityCamera.enabled = active;
+
+            if (active)
             {
-                cam.GetComponent<Camera>().enabled = false;
-                cam.enabled = false;
-            }
-            else
-            {
-                cam.GetComponent<Camera>().enabled = true;
-                cam.enabled = false;
+                ActiveCamera = cam;
             }
         }
     }
 
-    #region Setups
-    public void SetUpCam(AEMCamera incam,GameObject mainTarget,GameObject lookAtTarget, Vector3 inPosOffset, Vector3 inRotOffset, CameraPreset preset = CameraPreset.FixedLook)
+    public void SetUpCam(AEMCamera cam, GameObject mainTarget, GameObject lookAtTarget, Vector3 inPosOffset, Vector3 inRotOffset, CameraPreset preset = CameraPreset.FixedLook)
     {
-        SetCamMainTarget(incam, mainTarget);
-        SetCamLookat(incam,lookAtTarget);
-        SetCamPreset(incam, preset);
-        SetCamPositionOffset(incam, inPosOffset);
-        SetCamRotationOffset(incam, inRotOffset);
+        cam.MainTarget = mainTarget;
+        cam.LookAtTarget = lookAtTarget;
+        cam.CameraType = preset;
+        cam.CamPosOffset = inPosOffset;
+        cam.CamRotOffset = inRotOffset;
     }
-    public void SetUpCam(int incam, int mainTargetindex, int lookAtTargetindex, Vector3 inPosOffset, Vector3 inRotOffset, CameraPreset preset = CameraPreset.FixedLook)
+    public void SetUpCam(int i, int mainTargetindex, int lookAtTargetindex, Vector3 inPosOffset, Vector3 inRotOffset, CameraPreset preset = CameraPreset.FixedLook)
     {
-        SetCamMainTarget(incam, mainTargetindex);
-        SetCamLookat(incam, lookAtTargetindex);
-        SetCamPreset(incam, preset);
-        SetCamPositionOffset(incam, inPosOffset);
-        SetCamRotationOffset(incam, inRotOffset);
+        SetCamMainTarget(i, mainTargetindex);
+        SetCamLookat(i, lookAtTargetindex);
+        SetCamPreset(i, preset);
+        SetCamPositionOffset(i, inPosOffset);
+        SetCamRotationOffset(i, inRotOffset);
     }
-    public void SetCamMainTarget(AEMCamera incam, GameObject mainTarget)
+    public void SetCamMainTarget(int i, int intarget)
     {
-        incam.MainTarget = mainTarget;
-    }
-    public void SetCamMainTarget(int incam, int intarget)
-    {
-        if (incam >= Cameralist.Count)
+        if (i >= Cameralist.Count)
         {
-            print("Camera index" + incam + " does not exist");
+            print("Camera index" + i + " does not exist");
             return;
         }
         if (intarget >= Maintargets.Count)
@@ -123,17 +109,13 @@ public class AEMCameraControl : MonoBehaviour
             print("Maintargets [index " + intarget + "] does not exist");
             return;
         }
-        Cameralist[incam].MainTarget = Maintargets[intarget];
-    }   
-    public void SetCamLookat(AEMCamera incam, GameObject lookAtTarget)
-    {
-        incam.LookAtTarget = lookAtTarget;
+        Cameralist[i].MainTarget = Maintargets[intarget];
     }
-    public void SetCamLookat(int incam, int lookAtTarget)
+    public void SetCamLookat(int i, int lookAtTarget)
     {
-        if (incam >= Cameralist.Count)
+        if (i >= Cameralist.Count)
         {
-            print("Camera index" + incam + " does not exist");
+            print("Camera index" + i + " does not exist");
             return;
         }
         if (lookAtTarget >= Looktargets.Count)
@@ -141,32 +123,18 @@ public class AEMCameraControl : MonoBehaviour
             print("LookAtTarget [index " + lookAtTarget + "] does not exist");
             return;
         }
-        Cameralist[incam].LookAtTarget = Looktargets[lookAtTarget];
+        Cameralist[i].LookAtTarget = Looktargets[lookAtTarget];
     }
-    public void SetCamPreset(AEMCamera incam, CameraPreset preset)
+    public void SetCamPreset(int i, CameraPreset preset)
     {
-        incam.CameraType = preset;
+        Cameralist[i].CameraType = preset;
     }
-    public void SetCamPreset(int incam, CameraPreset preset)
+    public void SetCamPositionOffset(int i, Vector3 inPosOffset)
     {
-        Cameralist[incam].CameraType = preset;
+        Cameralist[i].CamPosOffset = inPosOffset;
     }
-    public void SetCamPositionOffset(AEMCamera incam, Vector3 inPosOffset)
+    public void SetCamRotationOffset(int i, Vector3 inRotOffset)
     {
-        incam.CamPosOffset=inPosOffset;
+        Cameralist[i].CamRotOffset = inRotOffset;
     }
-    public void SetCamPositionOffset(int incam, Vector3 inPosOffset)
-    {
-        Cameralist[incam].CamPosOffset = inPosOffset;
-    }
-    public void SetCamRotationOffset(AEMCamera incam, Vector3 inRotOffset)
-    {
-        incam.CamRotOffset = inRotOffset;
-    }
-    public void SetCamRotationOffset(int incam, Vector3 inRotOffset)
-    {
-        Cameralist[incam].CamRotOffset = inRotOffset;
-    }
-
-    #endregion
 }

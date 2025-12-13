@@ -20,7 +20,7 @@ namespace AEM
         /// <summary>
         /// The Unity camera
         /// </summary>
-        public Camera Cam;
+        public Camera unityCamera;
         /// <summary>
         /// CameraTypes
         /// </summary>
@@ -61,17 +61,13 @@ namespace AEM
 
         void Awake()
         {
-            //Assign UnityCamera ref
-            Cam = GetComponent<Camera>();
-        }
-
-        void Update()
-        {
-            
+            unityCamera = GetComponent<Camera>();
         }
 
         void LateUpdate()
         {
+            if (unityCamera.isActiveAndEnabled == false) return;
+
             axisMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(-AxisRotation), Vector3.one);
             forward = axisMatrix.MultiplyVector(Vector3.forward);
             up = axisMatrix.MultiplyVector(Vector3.up);
@@ -105,55 +101,54 @@ namespace AEM
                     break;
             }
 
-            if (CopyPositionToggle)
+            if (MainTarget)
             {
-                forward = axisMatrix.MultiplyVector(MainTarget.transform.forward);
-                up = axisMatrix.MultiplyVector(MainTarget.transform.up);
-                right = axisMatrix.MultiplyVector(MainTarget.transform.right);
+                if (CopyPositionToggle)
+                {
+                    forward = axisMatrix.MultiplyVector(MainTarget.transform.forward);
+                    up = axisMatrix.MultiplyVector(MainTarget.transform.up);
+                    right = axisMatrix.MultiplyVector(MainTarget.transform.right);
 
-                transform.position = MainTarget.transform.position + (forward * CamPosOffset.z) +
-                                     (up * CamPosOffset.y) + (right * CamPosOffset.x);
-            }
-            if (CopyRotationToggle)
-            {
-                forward = axisMatrix.MultiplyVector(MainTarget.transform.forward);
-                up = axisMatrix.MultiplyVector(MainTarget.transform.up);
-                right = axisMatrix.MultiplyVector(MainTarget.transform.right);
+                    transform.position = MainTarget.transform.position + (forward * CamPosOffset.z) +
+                                         (up * CamPosOffset.y) + (right * CamPosOffset.x);
+                }
+                if (CopyRotationToggle)
+                {
+                    forward = axisMatrix.MultiplyVector(MainTarget.transform.forward);
+                    up = axisMatrix.MultiplyVector(MainTarget.transform.up);
+                    right = axisMatrix.MultiplyVector(MainTarget.transform.right);
 
-                transform.rotation =
-                    Quaternion.Euler((MainTarget.transform.rotation.eulerAngles - AxisRotation) +
-                                     (-forward * CamRotOffset.z) + (up * CamRotOffset.y) +
-                                     (-right * CamRotOffset.x));
+                    transform.rotation =
+                        Quaternion.Euler((MainTarget.transform.rotation.eulerAngles - AxisRotation) +
+                                         (-forward * CamRotOffset.z) + (up * CamRotOffset.y) +
+                                         (-right * CamRotOffset.x));
+                }
+                if (AnchorPositionToggle)
+                {
+                    Vector3 FollowDir = Vector3.Normalize(MainTarget.transform.position - transform.position);
+                    if (AnchorMaxDistance < (MainTarget.transform.position - transform.position).magnitude)
+                    {
+                        transform.position = MainTarget.transform.position - FollowDir * AnchorMaxDistance;
+                    }
+                }
+                if (AnchorRotationToggle)
+                {
+                    Vector3 FollowDir = Vector3.Normalize(MainTarget.transform.position - transform.position);
+                    Quaternion LookRotation = Quaternion.LookRotation(FollowDir);
+                    if (AnchorMaxRotation < Quaternion.Angle(LookRotation, transform.rotation))
+                    {
+                        transform.rotation = Quaternion.RotateTowards(LookRotation, transform.rotation, AnchorMaxRotation);
+                    }
+                }
             }
-            if (LookAtToggle)
+            
+            if (LookAtToggle && LookAtTarget)
             {
                 transform.LookAt(LookAtTarget.transform);
             }
-            if (AnchorPositionToggle)
-            {
-                Vector3 FollowDir = Vector3.Normalize(MainTarget.transform.position - transform.position);
-                if (AnchorMaxDistance < (MainTarget.transform.position - transform.position).magnitude)
-                {
-                    transform.position = MainTarget.transform.position - FollowDir * AnchorMaxDistance;
-                }
-            }
-            if (AnchorRotationToggle)
-            {
-                Vector3 FollowDir = Vector3.Normalize(MainTarget.transform.position - transform.position);
-                Quaternion LookRotation = Quaternion.LookRotation(FollowDir);
-                if (AnchorMaxRotation < Quaternion.Angle(LookRotation, transform.rotation))
-                {
-                    transform.rotation = Quaternion.RotateTowards(LookRotation, transform.rotation, AnchorMaxRotation);
-                }
-            }
         }
 
-        public void Reset()
-        {
-            //TODO
-        }
-
-        #region CameraType setup
+        // CameraType setup
         void FixedLook()
         {
             CopyPositionToggle = false;
@@ -235,8 +230,13 @@ namespace AEM
 
         void Custom()
         {
+
         }
 
-        #endregion
+        // Public
+        public void Reset()
+        {
+            //TODO
+        }
     }
 }
